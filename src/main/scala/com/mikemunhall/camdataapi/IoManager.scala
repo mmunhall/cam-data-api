@@ -4,7 +4,8 @@ import java.io.File
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{Files, Paths}
 import java.io.{FileInputStream, FileOutputStream}
-import akka.actor.{Actor, Props}
+
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.http.scaladsl.server.directives.FileInfo
 
 object IoManager {
@@ -22,11 +23,13 @@ object IoManager {
   def props = Props[IoManager]
 }
 
-class IoManager extends Actor {
+class IoManager extends Actor with ActorLogging {
   import IoManager._
 
   def receive = {
     case GetRecords =>
+      log.info("GetRecords message received by IoManager")
+
       val records = new File(currentImagesPath).listFiles.filter(_.isFile).toList.filter { file =>
         file.getName.endsWith(".jpg")
       }.map { file =>
@@ -38,6 +41,8 @@ class IoManager extends Actor {
       sender() ! ImageRecords(records)
 
     case SaveRecord(metadata, file) =>
+      log.info("SaveRecord message received by IoManager")
+
       val newFilePath = currentImagesPath + '/' + metadata.fileName
       val in = new FileInputStream(file.getPath())
       val out = new FileOutputStream(newFilePath)
